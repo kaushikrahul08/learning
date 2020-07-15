@@ -13,8 +13,6 @@ resource "azurerm_resource_group" "rges" {
     }
 }
 
-
-
 resource "azurerm_virtual_network" "vnet" {
     name = "testingvnet"
     location = "East US"
@@ -30,7 +28,7 @@ resource "azurerm_subnet" "subnetv1" {
     name = "testingsubnet01"
     resource_group_name = azurerm_resource_group.rges.name
     virtual_network_name = azurerm_virtual_network.vnet.name
-    address_prefixes = "10.0.1.0/24"
+    address_prefixes = ["10.0.1.0/24"]
 
 }
 
@@ -47,6 +45,24 @@ resource "azurerm_public_ip" "pip" {
            }
 }
 
+resource "azurerm_lb" "lb" {
+    name = "testinglb"
+    location = azurerm_resource_group.rges.location
+    resource_group_name =azurerm_resource_group.rges.name
+
+frontend_ip_configuration {
+    name = "publicfront"
+    public_ip_address_id =  azurerm_public_ip.pip.id
+}
+}
+
+resource "azurerm_lb_backend_address_pool" "backpool" {
+ resource_group_name = azurerm_resource_group.rges.name
+ loadbalancer_id     = azurerm_lb.lb.id
+ name                = "backendpool"
+}
+
+
 resource "azurerm_network_interface" "nic" {
     count = 2
     name = "testingnic${count.index}"
@@ -60,16 +76,26 @@ resource "azurerm_network_interface" "nic" {
     }
 }
 
+resource "azurerm_availability_set" "avset" {
+ name                         = "avset"
+ location                     = azurerm_resource_group.rges.location
+ resource_group_name          = azurerm_resource_group.rges.name
+ platform_fault_domain_count  = 2
+ platform_update_domain_count = 5
+ managed                      = true
+}
+
 resource "azurerm_windows_virtual_machine" "vm" {
     count = 2
     name = "testingvm${count.index}"
+    availability_set_id = azurerm_availability_set.avset.id
     resource_group_name = azurerm_resource_group.rges.name
     location = azurerm_resource_group.rges.location
     size = "Standard_F2"
     admin_username      = "adminuser"
     admin_password      = "Welcome@12345"
     network_interface_ids = [element(azurerm_network_interface.nic.*.id,count.index)]
-
+    
     os_disk {
     name            = "osdisk${count.index}"
     caching              = "ReadWrite"
@@ -83,5 +109,17 @@ resource "azurerm_windows_virtual_machine" "vm" {
     version   = "latest"
   }
 }
+
+#--- if you need datadisk un-comment below with required count can be changed
+#resource "azurerm_managed_disk" "datadisk" {
+ #count                = 2
+ #name                 = "datadisk_${count.index}"
+ #location             = azurerm_resource_group.rges.location
+ #resource_group_name  = azurerm_resource_group.rges.name
+ #storage_account_type = "Standard_LRS"
+ #create_option        = "Empty"
+ #disk_size_gb         = "1023"
+#}
+
 
 
