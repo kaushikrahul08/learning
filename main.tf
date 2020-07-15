@@ -1,4 +1,3 @@
-* provider.azurerm: version = "~> 2.18"
 provider "azurerm" {
     features {}
 }
@@ -78,7 +77,7 @@ tags = {
            }
 
     os_disk {
-    name            = osdisk${count.index}
+    name            = "osdisk${count.index}"
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
