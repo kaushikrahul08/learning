@@ -30,7 +30,7 @@ resource "azurerm_subnet" "subnetv1" {
     name = "testingsubnet01"
     resource_group_name = azurerm_resource_group.rges.name
     virtual_network_name = azurerm_virtual_network.vnet.name
-    address_prefix = "10.0.1.0/24"
+    address_prefixes = "10.0.1.0/24"
 
 }
 
@@ -68,13 +68,7 @@ resource "azurerm_windows_virtual_machine" "vm" {
     size = "Standard_F2"
     admin_username      = "adminuser"
     admin_password      = "Welcome@12345"
-    network_interface_ids = [azurerm_network_interface.nic.*.id,count.index]
-
-tags = {
-        Environment = "SANDBOX"
-        Buildby = "Rahul Sharma"
-        Builddate = "15-07-2020"
-           }
+    network_interface_ids = [element(azurerm_network_interface.nic.*.id,count.index)]
 
     os_disk {
     name            = "osdisk${count.index}"
