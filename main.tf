@@ -71,6 +71,11 @@ resource "azurerm_windows_virtual_machine" "vm" {
     admin_password      = "Welcome@12345"
     network_interface_ids = [azurerm_network_interface.nic.*.id,count.index]
 
+tags = {
+        Environment = "SANDBOX"
+        Buildby = "Rahul Sharma"
+        Builddate = "15-07-2020"
+           }
 
     os_disk {
     name            = osdisk${count.index}
