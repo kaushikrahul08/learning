@@ -35,7 +35,9 @@ resource "azurerm_subnet" "subnetv1" {
 resource "azurerm_public_ip" "pip" {
     name = "testingpip01"
     resource_group_name = azurerm_resource_group.rges.name
-    allocation_method = "Dynamic"
+    sku = "Standard"
+    #sku = "Basic"
+    allocation_method = "Static"
     location = azurerm_resource_group.rges.location    
 
     tags = {
@@ -49,18 +51,32 @@ resource "azurerm_lb" "lb" {
     name = "testinglb"
     location = azurerm_resource_group.rges.location
     resource_group_name =azurerm_resource_group.rges.name
+    sku = "Standard"
+    #sku = "Basic"
 
 frontend_ip_configuration {
     name = "publicfront"
     public_ip_address_id =  azurerm_public_ip.pip.id
 }
-}
+   }
 
 resource "azurerm_lb_backend_address_pool" "backpool" {
  resource_group_name = azurerm_resource_group.rges.name
  loadbalancer_id     = azurerm_lb.lb.id
  name                = "backendpool"
 }
+
+resource "azurerm_lb_rule" "lbrule" {
+  resource_group_name            = azurerm_resource_group.rges.name
+  loadbalancer_id                = azurerm_lb.lb.id
+  name                           = "LBRule"
+  protocol                       = "Tcp"
+  frontend_port                  = 3389
+  backend_port                   = 3389
+  frontend_ip_configuration_name = "publicfront"
+}
+
+
 
 
 resource "azurerm_network_interface" "nic" {
